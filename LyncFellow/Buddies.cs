@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LyncFellow
 {
-    class Buddies
+    public class Buddies
     {
         enum VendorID { TenxTechnology = 0x1130 }
         enum TenxTechDeviceID { iBuddy1 = 0x0001, iBuddy2 = 0x0002 }
@@ -105,6 +105,14 @@ namespace LyncFellow
             {
                 buddy.Heartbeat(TimeMs);
             }
+        }
+
+        public void BlinkSingleColor(uint TimeMs = 3000)
+        {
+          foreach (var buddy in _buddies.Values)
+          {
+            buddy.BlinkSingleColor(TimeMs);
+          }
         }
 
         public void Rainbow(uint TimeMs = 3000)

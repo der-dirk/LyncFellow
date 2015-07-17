@@ -5,6 +5,8 @@ using System.Threading;
 using Microsoft.Lync.Model;
 using Microsoft.Lync.Model.Conversation;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace LyncFellow
 {
@@ -27,6 +29,7 @@ namespace LyncFellow
                 Application.Run(applicationContext);
             }
         }
+
     }
 
     class ApplicationContext : System.Windows.Forms.ApplicationContext
@@ -35,11 +38,16 @@ namespace LyncFellow
         System.ComponentModel.IContainer _components;
         NotifyIcon _notifyIcon;
         SettingsForm _settingsForm;
+        ViewModel _viewModel;
 
         Buddies _buddies;
         LyncClient _lyncClient;
         System.Windows.Forms.Timer _housekeepingTimer;
         DateTime _lyncEventsUpdated;
+
+        FileSystemWatcher _watcher;
+        private enum TrackerStatus { OK = 0, ERROR = 1, UNKNOWN = 2 }
+        TrackerStatus _trackerStatus;
 
         public ApplicationContext()
         {
@@ -53,7 +61,7 @@ namespace LyncFellow
             _components = new System.ComponentModel.Container();
             _notifyIcon = new NotifyIcon(_components)
             {
-                ContextMenuStrip = new ContextMenuStrip(), 
+                ContextMenuStrip = new ContextMenuStrip(),
                 Visible = true
             };
             _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem("Settings", null, new EventHandler(MenuSettingsItem_Click)));
@@ -66,6 +74,15 @@ namespace LyncFellow
             _housekeepingTimer.Tick += HousekeepingTimer_Tick;
             HousekeepingTimer_Tick(null, null);     // tick anyway enables timer when finished
 
+            _trackerStatus = TrackerStatus.OK;
+
+            if(Properties.Settings.Default.CITrackerPath.Length > 0)
+            {
+              _trackerStatus = TrackerStatus.UNKNOWN;
+              UpdateTrackerSetting();
+            }
+
+            _viewModel = new ViewModel(_buddies);
         }
 
         private void HousekeepingTimer_Tick(object sender, EventArgs e)
@@ -136,8 +153,88 @@ namespace LyncFellow
             _housekeepingTimer.Enabled = true;
         }
 
+        private void UpdateTrackerSetting()
+        {
+          if (_watcher == null)
+          {
+            _watcher = new FileSystemWatcher();
+            /* Watch for changes in LastAccess and LastWrite times, and
+                the renaming of files or directories. */
+            _watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite;
+
+            // Add event handlers.
+            _watcher.Changed += new FileSystemEventHandler(OnChanged);
+            _watcher.Created += new FileSystemEventHandler(OnChanged);
+            _watcher.Deleted += new FileSystemEventHandler(OnChanged);
+          }
+
+          // Stop Watching
+          _watcher.EnableRaisingEvents = false;
+
+          if (Properties.Settings.Default.CITrackerPath.Length > 0)
+          {
+            QueryTrackerFile();
+
+            // Begin watching.
+            try
+            {
+              _watcher.Path = Path.GetDirectoryName(Properties.Settings.Default.CITrackerPath);
+              _watcher.Filter = Path.GetFileName(Properties.Settings.Default.CITrackerPath);
+              _watcher.EnableRaisingEvents = true;
+            }
+            catch (Exception ex)
+            {
+              Console.WriteLine("{0}", ex.ToString());
+              _trackerStatus = TrackerStatus.UNKNOWN;
+            }
+          }
+          else
+          {
+            _trackerStatus = TrackerStatus.OK;
+          }
+        }
+
+        // Define the event handlers.
+        private void OnChanged(object source, FileSystemEventArgs arg)
+        {
+          QueryTrackerFile();
+        }
+
+        private void QueryTrackerFile()
+        {
+          TrackerStatus newStatus = TrackerStatus.UNKNOWN;
+          try
+          {
+            string path = Properties.Settings.Default.CITrackerPath;
+            using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+              using (var sr = new StreamReader(fs, Encoding.UTF8, true, 1024))
+              {
+                string lineOfText;
+                while ((lineOfText = sr.ReadLine()) != null)
+                {
+                  newStatus = (lineOfText.IndexOf("Compile OK") != -1) ? TrackerStatus.OK : TrackerStatus.ERROR;
+                  Console.WriteLine(lineOfText);
+                }
+              }
+            }
+          }
+          catch (Exception ex)
+          {
+            Console.WriteLine("{0}", ex.ToString());
+            newStatus = TrackerStatus.UNKNOWN;
+          }
+
+          if (_trackerStatus != newStatus)
+          {
+            _trackerStatus = newStatus;
+            _buddies.Heartbeat();
+            UpdateBuddiesColorBySelfAvailability();
+          }
+        }
+
         private bool IsLyncConnectionValid()
-        { 
+        {
             return _lyncClient != null && _lyncClient.State == ClientState.SignedIn && _lyncClient.Self.Contact != null;
         }
 
@@ -184,36 +281,65 @@ namespace LyncFellow
         private void ConversationManager_ConversationAdded(object sender, ConversationManagerEventArgs e)
         {
             bool IncomingCall = false;
+            bool NewConversationIM = false;
             foreach (var Modality in e.Conversation.Modalities)
             {
-                if (Modality.Value != null && Modality.Value.State == ModalityState.Notified)
+              if (Modality.Value != null && Modality.Value.State == ModalityState.Notified)
+              {
+                if (Modality.Key == ModalityTypes.InstantMessage)
                 {
-                    IncomingCall = true;
+                  NewConversationIM = true;
                 }
+                else if (Modality.Key == ModalityTypes.AudioVideo)
+                {
+                  IncomingCall = true;
+                }
+              }
             }
 
             if (IncomingCall)
             {
-                if (Properties.Settings.Default.DanceOnIncomingCall)
-                {
-                    _buddies.Dance(5000);
-                    _buddies.FlapWings(5000);
-                }
+              if (Properties.Settings.Default.IncomingCall_DoDance)
+                _buddies.Dance(5000);
+              if (Properties.Settings.Default.IncomingCall_DoFlapWings)
+                _buddies.FlapWings(5000);
+              if (Properties.Settings.Default.IncomingCall_DoGlowHeart)
+                _buddies.Heartbeat(5000);
 
-                if (e.Conversation.Participants.Count >= 2)
-                {
-                    var Initiator = e.Conversation.Participants[1].Contact;
-                    Trace.WriteLine(string.Format("LyncFellow: Initiator.Uri=\"{0}\"", Initiator.Uri));
-                    // magic heartbeat for incoming conversations from G&K ;-)
-                    if (Initiator.Uri.Contains("glueckkanja") 
-                        || Initiator.Uri.Contains("+4969800706") 
-                        || Initiator.Uri.Contains("+49711460533")
-                        || Initiator.Uri.Contains("+4940609298")
-                        || Initiator.Uri.Contains("+49151182260"))
-                    {
-                        _buddies.Heartbeat(10000);
-                    }
-                }
+              if (Properties.Settings.Default.IncomingCall_DoBlinkSingleColor)
+                _buddies.BlinkSingleColor(5000);
+              else if (Properties.Settings.Default.IncomingCall_DoBlinkRainbow)
+                _buddies.Rainbow(5000);
+
+                //if (e.Conversation.Participants.Count >= 2)
+                //{
+                //    var Initiator = e.Conversation.Participants[1].Contact;
+                //    Trace.WriteLine(string.Format("LyncFellow: Initiator.Uri=\"{0}\"", Initiator.Uri));
+                //    // magic heartbeat for incoming conversations from G&K ;-)
+                //    if (Initiator.Uri.Contains("glueckkanja")
+                //        || Initiator.Uri.Contains("+4969800706")
+                //        || Initiator.Uri.Contains("+49711460533")
+                //        || Initiator.Uri.Contains("+4940609298")
+                //        || Initiator.Uri.Contains("+49151182260"))
+                //    {
+                //        _buddies.Heartbeat(10000);
+                //    }
+                //}
+            }
+
+            if (NewConversationIM)
+            {
+              if (Properties.Settings.Default.NewIMConversation_DoDance)
+                _buddies.Dance(5000);
+              if (Properties.Settings.Default.NewIMConversation_DoFlapWings)
+                _buddies.FlapWings(5000);
+              if (Properties.Settings.Default.NewIMConversation_DoGlowHeart)
+                _buddies.Heartbeat(5000);
+
+              if (Properties.Settings.Default.NewIMConversation_DoBlinkSingleColor)
+                _buddies.BlinkSingleColor(5000);
+              else if (Properties.Settings.Default.NewIMConversation_DoBlinkRainbow)
+                _buddies.Rainbow(5000);
             }
         }
 
@@ -238,21 +364,30 @@ namespace LyncFellow
 
             var colorOld = _buddies.Color;
             var colorNew = iBuddy.Color.Off;
-            if (Dnd || (RedOnCall && InACall) || (RedOnBusy && Busy))
+            if (_trackerStatus != TrackerStatus.OK)
             {
+              colorNew = (_trackerStatus == TrackerStatus.ERROR) ? iBuddy.Color.Red : iBuddy.Color.Lila;
+            }
+            else
+            {
+              if (Dnd || (RedOnCall && InACall) || (RedOnBusy && Busy))
+              {
                 colorNew = iBuddy.Color.Red;
-            }
-            else if (Free || Busy)
-            {
+              }
+              else if (Free || Busy)
+              {
                 colorNew = iBuddy.Color.Green;
-            }
-            else if (Away)
-            {
+              }
+              else if (Away)
+              {
                 colorNew = iBuddy.Color.Yellow;
+              }
             }
+
+
             _buddies.Color = colorNew;
 
-            Trace.WriteLine(string.Format("LyncFellow: UpdateBuddiesColorBySelfAvailability lyncValid={0}, Availability={1}, Activity=\"{2}\", RedOnBusy={3}, RedOnCall={4}, InACall={5}, Dnd={6}, Busy={7}, Free={8}, Away={9}, colorOld={10}, colorNew={11}", 
+            Trace.WriteLine(string.Format("LyncFellow: UpdateBuddiesColorBySelfAvailability lyncValid={0}, Availability={1}, Activity=\"{2}\", RedOnBusy={3}, RedOnCall={4}, InACall={5}, Dnd={6}, Busy={7}, Free={8}, Away={9}, colorOld={10}, colorNew={11}",
                 lyncValid, Availability, Activity, RedOnBusy, RedOnCall, InACall, Dnd, Busy, Free, Away, colorOld, colorNew));
         }
 
@@ -260,7 +395,7 @@ namespace LyncFellow
         {
             if (_settingsForm == null)
             {
-                _settingsForm = new SettingsForm();
+                _settingsForm = new SettingsForm(_viewModel);
                 _settingsForm.Closed += settingsForm_Closed;
                 _settingsForm.Show();
             }
@@ -268,9 +403,10 @@ namespace LyncFellow
         }
 
         void settingsForm_Closed(object sender, EventArgs e)
-        {   
+        {
             _settingsForm = null;
 
+            UpdateTrackerSetting();
             UpdateBuddiesColorBySelfAvailability();
         }
 

@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace LyncFellow
 {
-    class iBuddy
+    public class iBuddy
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct SECURITY_ATTRIBUTES
@@ -46,8 +46,11 @@ namespace LyncFellow
 
         private uint _danceTimeout = 0;
         private uint _rainbowTimeout = 0;
+        private uint _singleColorTimeout = 0;
         private uint _heartbeatTimeout = 0;
         private uint _flapTimeout = 0;
+
+        private Color _singleBlinkColor = Color.Lila;
 
         public bool Init(string HidDevicePath)
         {
@@ -116,7 +119,7 @@ namespace LyncFellow
                     {
                         _turn = Turn.Off;
                     }
-                    else if ((_danceTimeout % (300 / _threadWaitTime)) == 0)
+                    else if ((_danceTimeout % (200 / _threadWaitTime)) == 0)
                     {
                         _turn = _turn == Turn.Left ? Turn.Right : Turn.Left;
                     }
@@ -130,7 +133,7 @@ namespace LyncFellow
                     {
                         _flap = Flap.Off;
                     }
-                    else if ((_flapTimeout % (300 / _threadWaitTime)) == 0)
+                    else if ((_flapTimeout % (100 / _threadWaitTime)) == 0)
                     {
                         _flap = _flap == Flap.Up ? Flap.Down : Flap.Up;
                     }
@@ -158,11 +161,25 @@ namespace LyncFellow
                     {
                         _currentColor = _targetColor;
                     }
-                    else
+                    else if ((_rainbowTimeout % (100 / _threadWaitTime)) == 0)
                     {
                         _currentColor = (Color)(_rainbowTimeout % 7);
                     }
                     updateState = true;
+                }
+
+                if (_singleColorTimeout > 0)
+                {
+                  _singleColorTimeout--;
+                  if (_singleColorTimeout == 0)
+                  {
+                    _currentColor = _targetColor;
+                  }
+                  else if ((_singleColorTimeout % (200 / _threadWaitTime)) == 0)
+                  {
+                    _currentColor = (_targetColor == _currentColor) ? _singleBlinkColor : _targetColor;
+                  }
+                  updateState = true;
                 }
 
                 if (updateState) {
@@ -192,6 +209,11 @@ namespace LyncFellow
         public void Heartbeat(uint TimeMs = 5000)
         {
             _heartbeatTimeout = TimeMs / _threadWaitTime;
+        }
+
+        public void BlinkSingleColor(uint TimeMs = 3000)
+        {
+            _singleColorTimeout = TimeMs / _threadWaitTime;
         }
 
         public void Rainbow(uint TimeMs = 3000)
