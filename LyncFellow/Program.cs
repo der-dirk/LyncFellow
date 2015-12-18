@@ -235,6 +235,10 @@ namespace LyncFellow
                                 newStatus = (lineOfText.IndexOf("Compile OK") != -1) ? TrackerStatus.OK : TrackerStatus.ERROR;
                                 Console.WriteLine(lineOfText);
                             }
+
+                            // "ERROR" wins
+                            if (newStatus == TrackerStatus.ERROR)
+                                break;
                         }
                     }
                 }
