@@ -1,9 +1,9 @@
 !include "FileFunc.nsh"
 !include "MUI2.nsh"
 
-!define APPNAME "LyncFellow"
-!define APPNAMESHORT "LyncFellow"
-!define APPVERSION "0.8.1.5"
+!define APPNAME "LyncFellow+"
+!define APPNAMESHORT "LyncFellow+"
+!define APPVERSION "1.0.0.0"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAMESHORT}"
 
 !define MUI_ICON "..\Global\LyncFellow.ico"

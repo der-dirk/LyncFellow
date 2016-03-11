@@ -24,17 +24,27 @@ namespace LyncFellow
       Icon = Properties.Resources.LyncFellow;
       Text += string.Format(" (Version {0})", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version);
 
-      switch (Properties.Settings.Default.RedOnDndCallBusy)
+      if (Properties.Settings.Default.RedOnTrackerError)
       {
-        case ContactAvailability.DoNotDisturb:
-          OnDoNotDisturb.Checked = true;
-          break;
-        case ContactAvailability.Busy:
-          OnBusy.Checked = true;
-          break;
-        default:
-          OnCallConference.Checked = true;
-          break;
+        OnTrackerError.Checked = true;
+        CITrackerPath.Enabled = true;
+      }
+      else
+      {
+        CITrackerPath.Enabled = false;
+
+        switch (Properties.Settings.Default.RedOnDndCallBusy)
+        {
+          case ContactAvailability.DoNotDisturb:
+            OnDoNotDisturb.Checked = true;
+            break;
+          case ContactAvailability.Busy:
+            OnBusy.Checked = true;
+            break;
+          default:
+            OnCallConference.Checked = true;
+            break;
+        }
       }
 
       IncomingCall_DoDance.Checked = Properties.Settings.Default.IncomingCall_DoDance;
@@ -67,19 +77,28 @@ namespace LyncFellow
       Properties.Settings.Default.NewIMConversation_DoBlinkRainbow = NewIMConversation_DoBlinkRainbow.Checked;
 
       Properties.Settings.Default.CITrackerPath = CITrackerPath.Text;
-
-      if (OnDoNotDisturb.Checked)
-      {
-        Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.DoNotDisturb;
-      }
-      else if (OnBusy.Checked)
-      {
-        Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.Busy;
-      }
-      else
+      
+      Properties.Settings.Default.RedOnTrackerError = OnTrackerError.Checked;
+      if (OnTrackerError.Checked)
       {
         Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.None;
       }
+      else
+      {
+        if (OnDoNotDisturb.Checked)
+        {
+          Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.DoNotDisturb;
+        }
+        else if (OnBusy.Checked)
+        {
+          Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.Busy;
+        }
+        else
+        {
+          Properties.Settings.Default.RedOnDndCallBusy = ContactAvailability.None;
+        }
+      }
+
       Properties.Settings.Default.Save();
       this.Close();
     }
@@ -131,6 +150,11 @@ namespace LyncFellow
     private void DemoBlinkMultiColorButton_Click(object sender, EventArgs e)
     {
       _model.blinkRainbow();
+    }
+
+    private void OnTrackerError_CheckedChanged(object sender, EventArgs e)
+    {
+      CITrackerPath.Enabled = OnTrackerError.Checked;
     }
 
   }
