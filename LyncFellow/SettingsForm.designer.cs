@@ -100,8 +100,9 @@
       // 
       // pictureBox1
       // 
+      this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
       this.pictureBox1.Image = global::LyncFellow.Properties.Resources.LyncFellowSettings;
-      this.pictureBox1.Location = new System.Drawing.Point(408, 9);
+      this.pictureBox1.Location = new System.Drawing.Point(434, 9);
       this.pictureBox1.Name = "pictureBox1";
       this.pictureBox1.Size = new System.Drawing.Size(399, 414);
       this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -120,9 +121,10 @@
       // 
       // label4
       // 
+      this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
       this.label4.AutoSize = true;
       this.label4.Font = new System.Drawing.Font("Calibri", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.label4.Location = new System.Drawing.Point(25, 351);
+      this.label4.Location = new System.Drawing.Point(25, 358);
       this.label4.Name = "label4";
       this.label4.Size = new System.Drawing.Size(377, 23);
       this.label4.TabIndex = 34;
@@ -130,13 +132,13 @@
       // 
       // panel1
       // 
+      this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
       this.panel1.Controls.Add(this.label11);
       this.panel1.Controls.Add(this.label7);
       this.panel1.Controls.Add(this.label6);
       this.panel1.Controls.Add(this.label5);
       this.panel1.Controls.Add(this.GlueckkanjaLabel);
-      this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-      this.panel1.Location = new System.Drawing.Point(0, 582);
+      this.panel1.Location = new System.Drawing.Point(0, 589);
       this.panel1.Name = "panel1";
       this.panel1.Size = new System.Drawing.Size(664, 86);
       this.panel1.TabIndex = 35;
@@ -201,11 +203,12 @@
       // 
       // CloseButtton
       // 
+      this.CloseButtton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
       this.CloseButtton.BackColor = System.Drawing.Color.LightGray;
       this.CloseButtton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
       this.CloseButtton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
       this.CloseButtton.Font = new System.Drawing.Font("Calibri", 12F);
-      this.CloseButtton.Location = new System.Drawing.Point(505, 523);
+      this.CloseButtton.Location = new System.Drawing.Point(531, 530);
       this.CloseButtton.Name = "CloseButtton";
       this.CloseButtton.Size = new System.Drawing.Size(148, 33);
       this.CloseButtton.TabIndex = 7;
@@ -270,11 +273,12 @@
       // 
       // tabControl1
       // 
+      this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
       this.tabControl1.Controls.Add(this.tabPage1);
       this.tabControl1.Controls.Add(this.tabPage2);
       this.tabControl1.Controls.Add(this.tabPage3);
       this.tabControl1.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.tabControl1.Location = new System.Drawing.Point(31, 375);
+      this.tabControl1.Location = new System.Drawing.Point(31, 382);
       this.tabControl1.Name = "tabControl1";
       this.tabControl1.SelectedIndex = 0;
       this.tabControl1.Size = new System.Drawing.Size(407, 188);
@@ -532,17 +536,22 @@
       // 
       // CITrackerPath
       // 
+      this.CITrackerPath.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
       this.CITrackerPath.Location = new System.Drawing.Point(53, 230);
       this.CITrackerPath.Multiline = true;
       this.CITrackerPath.Name = "CITrackerPath";
-      this.CITrackerPath.Size = new System.Drawing.Size(385, 81);
+      this.CITrackerPath.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+      this.CITrackerPath.Size = new System.Drawing.Size(411, 88);
       this.CITrackerPath.TabIndex = 52;
       // 
       // label12
       // 
+      this.label12.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
       this.label12.AutoSize = true;
       this.label12.Font = new System.Drawing.Font("Calibri", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-      this.label12.Location = new System.Drawing.Point(50, 314);
+      this.label12.Location = new System.Drawing.Point(50, 321);
       this.label12.Name = "label12";
       this.label12.Size = new System.Drawing.Size(170, 13);
       this.label12.TabIndex = 53;
@@ -553,7 +562,7 @@
       this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
       this.BackColor = System.Drawing.Color.White;
-      this.ClientSize = new System.Drawing.Size(664, 668);
+      this.ClientSize = new System.Drawing.Size(690, 675);
       this.Controls.Add(this.OnTrackerError);
       this.Controls.Add(this.label12);
       this.Controls.Add(this.CITrackerPath);
@@ -569,9 +578,8 @@
       this.Controls.Add(this.label2);
       this.Controls.Add(this.pictureBox1);
       this.Font = new System.Drawing.Font("Calibri", 8.25F);
-      this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-      this.MaximizeBox = false;
       this.MinimizeBox = false;
+      this.MinimumSize = new System.Drawing.Size(676, 665);
       this.Name = "SettingsForm";
       this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
       this.Text = "LyncFellow Settings";
